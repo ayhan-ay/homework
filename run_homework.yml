@@ -1,0 +1,35 @@
+---
+- name: Run all the homework roles and playbooks from here
+  hosts: localhost
+  gather_facts: false
+  tasks:
+  - name: Init homework Environment
+    import_role:
+      name: init-homework
+#    when: false
+
+- name: Init bastion Host in the Homework Lab
+  hosts: bastion
+  gather_facts: true
+  become: true
+  become_method: sudo
+  tasks:
+  - name: Init Bastion Host task
+    import_role:
+      name: init-bastion
+  vars:
+    ansible_remote_tmp: /tmp
+#    when: false
+
+- name: Init workstation in the OSP Lab
+  hosts: workstation
+  gather_facts: true
+  become: true
+  become_method: sudo
+  tasks:
+  - name: Init workstation
+    import_role:
+      name: init-workstation
+#    when: false
+
+#- import_playbook: site-setup-workstation.yml

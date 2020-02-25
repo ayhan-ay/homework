@@ -1,0 +1,20 @@
+# Playbook to setup workstation and create osp network, router, SG and ssh keypair
+
+- hosts: localhost
+  tasks:
+  - name: Read the OSP GUID from file
+    set_fact:
+      osp_guid: "{{ lookup('file','GUID.OSP') }}"
+  - name: Create workstation inventory
+    add_host:
+       name: "workstation-{{ osp_guid }}.rhpds.opentlc.com"
+       group: workstation
+
+
+- hosts: workstation
+  become: yes
+  roles:
+    - setup-workstation
+
+#- import_playbook: site-install-isolated-node.yml 
+

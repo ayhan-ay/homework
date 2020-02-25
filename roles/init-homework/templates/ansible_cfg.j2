@@ -1,0 +1,14 @@
+[defaults]
+inventory = homework_inventory
+[privilege_escalation]
+[paramiko_connection]
+[ssh_connection]
+ssh_args = -F .ssh.cfg -o ControlMaster=auto -o ControlPersist=5m -o LogLevel=QUIET
+[persistent_connection]
+connect_timeout = 30
+connect_retries = 30
+connect_interval = 1
+[accelerate]
+[selinux]
+[colors]
+[diff]

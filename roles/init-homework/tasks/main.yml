@@ -1,0 +1,42 @@
+---
+# tasks file for roles/init_homework
+
+- name: Read the OSP Lab GUID from file
+  set_fact:
+    osp_guid: "{{ lookup('file','GUID.OSP') }}"
+
+- name:
+  debug:
+    msg: "OpenStack - Lab GUID: {{ osp_guid }}"
+
+- name: Read the Three Tier Lab GUID from file
+  set_fact:
+    tt_guid: "{{ lookup('file','GUID.TT') }}"
+
+- name:
+  debug:
+    msg: "Three Tier Lab GUID: {{ tt_guid }}"
+
+- name: Read the Homework Lab GUID from file
+  set_fact:
+    hw_guid: "{{ lookup('file','GUID.HW') }}"
+
+- name: Read the Homework Lab Username from file
+  set_fact:
+    hw_username: "{{ lookup('file','USER.HW') }}"
+
+- name:
+  debug:
+    msg: "Homework Lab GUID: {{ hw_guid }}"
+
+- name: setup the ansible.cfg file
+  template:
+    src: ansible_cfg.j2
+    dest: ansible.cfg
+#  failed_when: false
+
+- name: setup the .ssh.cfg file
+  template:
+    src: ssh_cfg.j2
+    dest: .ssh.cfg
+#  failed_when: false

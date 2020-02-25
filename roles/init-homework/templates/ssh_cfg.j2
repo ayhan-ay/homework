@@ -1,0 +1,29 @@
+# {{ ansible_managed }}
+
+{% block main %}
+Host *
+  ForwardAgent yes
+  ControlMaster auto
+  ControlPath /tmp/%h-%r
+  ControlPersist 5m
+  StrictHostKeyChecking no
+  IdentityFile ~/.ssh/id_rsa
+
+Host workstation
+	Hostname workstation-{{ osp_guid }}.rhpds.opentlc.com
+	User {{ hw_username }}
+
+Host bastion
+  Hostname bastion.{{ hw_guid }}.example.opentlc.com
+  User {{ hw_username }}
+
+{% for i in range(1,4) %}
+Host tower{{ i }}
+  Hostname tower{{ i }}.{{ hw_guid }}.example.opentlc.com
+{% endfor %}
+
+Host tower*
+  User ec2-user
+  IdentityFile ~/.ssh/{{ hw_guid }}key.pem
+
+{% endblock %}

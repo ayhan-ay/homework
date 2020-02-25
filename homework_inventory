@@ -1,0 +1,13 @@
+[all:vars]
+
+[OSP]
+workstation
+
+[OSP:vars]
+#IdentityFile=~/.ssh/openstack.pem
+
+[HW]
+bastion
+
+[HW:vars]
+#IdentityFile=~/.ssh/id_rsa

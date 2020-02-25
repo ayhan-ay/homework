@@ -1,0 +1,145 @@
+---
+- name: Read the Homework Lab GUID from file
+  set_fact:
+    hw_guid: "{{ lookup('file','GUID.HW') }}"
+
+- name: Read the OSP Lab GUID from file
+  set_fact:
+    osp_guid: "{{ lookup('file','GUID.OSP') }}"
+
+- name: Read the Homework ansible user
+  set_fact:
+    hw_user: "{{ lookup('file','USER.HW') }}"
+  become: false
+
+- name:
+  debug:
+    var: hw_user
+  become: false
+
+# tasks file for roles/init-bastion
+- name: Get user information on the remote system
+  user:
+    name: "{{ hw_user }}"
+  check_mode: true
+  register: r_user
+
+- name: Create home directory
+  file:
+    path: "{{ r_user.home }}"
+    state: directory
+    owner: "{{ r_user.name }}"
+    group: "{{ r_user.group }}"
+
+- name: Copy the skeleton files
+  shell: "tar -C /etc/skel -c ./ | tar -C {{ r_user.home }} -xf -"
+  vars:
+    become: false  
+
+# Create user ~/.ssh
+- name: Create ssh configuration directory for remote user
+  file:
+    path: "{{ r_user.home }}/.ssh"
+    owner: "{{ r_user.name }}"
+    group: "{{ r_user.group }}"
+    mode: 0700
+    state: directory
+
+# Copy the root <GUID>ckey.pem from /root/.ssh to our user ~/.ssh
+- name: Copy root GUID key from root to our user
+  copy:
+    remote_src: yes
+    src: "/root/.ssh/{{ hw_guid }}key.pem"
+    dest: "{{ r_user.home }}/.ssh"
+    owner: "{{ r_user.name }}"
+    group: "{{ r_user.group }}"
+    mode: 0600
+
+# Install ssh configuration in remote user@bastion
+- name: Install ssh configuration in remote user@bastion ssh configuration dir
+  template:
+    src: ssh_cfg.j2
+    dest: "{{ r_user.home }}/.ssh/config"
+    owner: "{{ r_user.name }}"
+    group: "{{ r_user.group }}"
+    mode: 0600
+
+# Download the tower keys to local machines
+- name: Download the key used to access the tower servers in the root home
+  fetch:
+    src: "/root/.ssh/{{ hw_guid }}key.pem"
+    dest: "~/.ssh/{{ hw_guid }}key.pem"
+    flat: true
+
+# Set permissions on the key file
+- name: Set permissions on the key file
+  file:
+    path: "~/.ssh/{{ hw_guid }}key.pem"
+    mode: 0600
+  delegate_to: localhost
+  become: false
+
+# Download the tower public key to local machines
+- name: Download the key used to access the tower servers
+  fetch:
+    src: "/root/.ssh/{{ hw_guid }}key.pub"
+    dest: "~/.ssh/{{ hw_guid }}key.pub"
+    flat: true
+
+# Set permissions on the key file
+- name: Set permissions on the key file
+  file:
+    path: "~/.ssh/{{ hw_guid }}key.pem"
+    mode: 0644
+  delegate_to: localhost
+  become: false
+
+# Copy Openlab user private key to bastion to permit access to the OSP environment through the workstation with root user
+- name: Copy id_rsa private key
+  copy:
+    src: ~/.ssh/id_rsa
+    dest: /root/.ssh/mykey.pem
+    mode: '0400'
+    owner: root
+    group: root
+
+# Copy Openlab user public key to bastion to permit access to the OSP environment through the workstation with root user
+- name: Copy id_rsa.pub public key
+  copy:
+    src: ~/.ssh/id_rsa.pub
+    dest: /root/.ssh/mykey.pub
+    mode: '0400'
+    owner: root
+    group: root
+
+- name: Read the git username from file
+  set_fact:
+    git_user: "{{ lookup('file','GIT.USER') }}"
+
+- name: Configure bastion root's ssh client
+  template:
+    src: ssh_cfg.j2
+    dest: /root/.ssh/config
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Clone the advanced homework repository in the root remote directory
+  git:
+    repo: "https://github.com/{{ git_user }}/ansible_advance_homework"
+    dest: '/root/ansible_advance_homework'
+    clone: true
+  become: true
+  failed_when: false
+
+- name: Read user email from file
+  set_fact:
+    user_email: "{{ lookup('file','EMAIL') }}"
+
+- name: Copy environment variables script in the root home
+  template:
+    src: run_tower_config.sh.j2
+    dest: ~/run_tower_config.sh
+    owner: root
+    group: root
+    mode: '0700'

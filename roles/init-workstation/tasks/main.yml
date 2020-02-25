@@ -1,0 +1,15 @@
+---
+- name: Read the user name to access OSP from file
+  set_fact:
+    osp_user: "{{ lookup('file','USER.OSP') }}"
+
+- name: Get user information on the remote system
+  user:
+    name: "{{ osp_user }}"
+  check_mode: true
+  register: r_user
+
+- name: Read the Openstack Lab GUID from file
+  set_fact:
+    osp_guid: "{{ lookup('file','GUID.OSP') }}"
+
